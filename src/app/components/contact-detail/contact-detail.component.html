@@ -1,0 +1,172 @@
+<div class="container p-3" dir="rtl">
+
+  <!-- Header עם כותרת -->
+  <div class="row mb-4" dir="rtl">
+    <div class="col-12">
+      <div class="d-flex justify-content-center align-items-center mb-3">
+        <!-- כותרת במרכז -->
+        <h2 class="mb-0 text-center">
+          {{ isNewContact ? 'הוספת איש קשר' : (isEditMode ? 'עריכת איש קשר' : 'פרטי איש קשר') }}
+        </h2>
+      </div>
+    </div>
+  </div>
+
+  <!-- Spinner כשטוען -->
+  <app-spinner [show]="loading"></app-spinner>
+
+  <!-- תוכן הטופס/פרטים -->
+  <div *ngIf="!loading" class="row">
+    <div class="col-12 col-lg-8 mx-auto">
+      <div class="card shadow">
+        <div class="card-body p-4">
+
+          <!-- כפתורי פעולה בתוך הכרטיס -->
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <!-- כפתור חזרה -->
+            <button class="btn btn-outline-primary" (click)="goBack()">
+              <i class="fas fa-chevron-right me-2"></i>
+              חזרה
+            </button>
+
+            <!-- כפתורי עריכה/מחיקה (מוצג רק ב-View ורק כשהרשומה לא חדשה) -->
+            <div *ngIf="!isNewContact && !isEditMode" class="d-flex align-items-center gap-3">
+              <button type="button" class="btn btn-primary d-flex align-items-center gap-2 px-3 py-2 shadow-sm"
+                (click)="isEditMode = true">
+                <i class="fas fa-pen"></i>
+                ערוך
+              </button>
+
+              <button type="button" class="btn btn-danger d-flex align-items-center gap-2 px-3 py-2 shadow-sm"
+                (click)="onDelete()">
+                <i class="fas fa-trash-alt"></i>
+                מחק
+              </button>
+            </div>
+
+
+          </div>
+
+          <!-- תמונת פרופיל -->
+          <div class="text-center mb-4">
+                       <img
+                        [src]="contact.image || 'https://ui-avatars.com/api/?name=' + contact.name + '&background=0d69fd&color=fff&size=80'"
+                        [alt]="contact.name" class="rounded-circle border border-3 border-white shadow-sm"
+                        style="width: 72px; height: 72px; object-fit: cover;">
+          </div>
+
+          <!-- טופס -->
+          <form [formGroup]="contactForm" (ngSubmit)="onSave()">
+
+            <!-- שם -->
+            <div class="mb-3">
+              <label class="form-label">שם מלא <span class="text-danger"
+                  *ngIf="isNewContact || isEditMode">*</span></label>
+              <input type="text" class="form-control" [class.is-invalid]="isFieldInvalid('name')"
+                [readonly]="!isNewContact && !isEditMode" formControlName="name" placeholder="הכנס שם מלא">
+              <div class="invalid-feedback" *ngIf="isFieldInvalid('name')">
+                {{ getFieldError('name') }}
+              </div>
+            </div>
+
+            <!-- כתובת מלאה -->
+            <div class="mb-3">
+              <label class="form-label">כתובת מלאה <span class="text-danger"
+                  *ngIf="isNewContact || isEditMode">*</span></label>
+              <textarea class="form-control" rows="2" [class.is-invalid]="isFieldInvalid('fullAddress')"
+                [readonly]="!isNewContact && !isEditMode" formControlName="fullAddress"
+                placeholder="הכנס כתובת מלאה"></textarea>
+              <div class="invalid-feedback" *ngIf="isFieldInvalid('fullAddress')">
+                {{ getFieldError('fullAddress') }}
+              </div>
+            </div>
+
+            <!-- אימייל -->
+            <div class="mb-3">
+              <label class="form-label">אימייל <span class="text-danger"
+                  *ngIf="isNewContact || isEditMode">*</span></label>
+              <input type="email" class="form-control" [class.is-invalid]="isFieldInvalid('email')"
+                [readonly]="!isNewContact && !isEditMode" formControlName="email" placeholder="הכנס כתובת אימייל">
+              <div class="invalid-feedback" *ngIf="isFieldInvalid('email')">
+                {{ getFieldError('email') }}
+              </div>
+            </div>
+
+            <!-- טלפון בית -->
+            <div class="mb-3">
+              <label class="form-label">טלפון בית</label>
+              <input type="tel" class="form-control" [class.is-invalid]="isFieldInvalid('phone')"
+                [readonly]="!isNewContact && !isEditMode" formControlName="phone" placeholder="הכנס טלפון בית">
+              <div class="invalid-feedback" *ngIf="isFieldInvalid('phone')">
+                {{ getFieldError('phone') }}
+              </div>
+            </div>
+
+            <!-- טלפון נייד -->
+            <div class="mb-3">
+              <label class="form-label">טלפון נייד <span class="text-danger"
+                  *ngIf="isNewContact || isEditMode">*</span></label>
+              <input type="tel" class="form-control" [class.is-invalid]="isFieldInvalid('cell')"
+                [readonly]="!isNewContact && !isEditMode" formControlName="cell" placeholder="הכנס טלפון נייד">
+              <div class="invalid-feedback" *ngIf="isFieldInvalid('cell')">
+                {{ getFieldError('cell') }}
+              </div>
+            </div>
+
+            <!-- גיל -->
+            <div class="mb-3">
+              <label class="form-label">גיל </label>
+              <input type="number" class="form-control" [class.is-invalid]="isFieldInvalid('age')"
+                [readonly]="!isNewContact && !isEditMode" formControlName="age" placeholder="הכנס גיל" min="1"
+                max="120">
+              <div class="invalid-feedback" *ngIf="isFieldInvalid('age')">
+                {{ getFieldError('age') }}
+              </div>
+            </div>
+
+            <!-- שדה תמונה -->
+            <div class="mb-3">
+              <label class="form-label">קישור לתמונה</label>
+              <input type="url" class="form-control" [readonly]="!isNewContact && !isEditMode" formControlName="image"
+                placeholder="הכנס קישור לתמונה (אופציונלי)">
+            </div>
+
+            <!-- תאריך רישום - רק לאיש קשר קיים -->
+            <div class="mb-4" *ngIf="!isNewContact">
+              <label class="form-label">תאריך רישום</label>
+              <input type="text" class="form-control" readonly [value]="contact.registrationDate | date:'dd/MM/yyyy'">
+            </div>
+
+            <!-- כפתורי פעולה - רק במצב עריכה או יצירה -->
+            <div *ngIf="isNewContact || isEditMode" class="d-flex justify-content-end gap-2 mt-4">
+              <button type="button" class="btn btn-secondary" (click)="onCancel()" [disabled]="loading">
+                ביטול
+              </button>
+              <button type="submit" class="btn btn-primary" [disabled]="loading || contactForm.invalid">
+                <span *ngIf="loading" class="spinner-border spinner-border-sm me-2" role="status"></span>
+                {{ isNewContact ? 'צור איש קשר' : 'שמור שינויים' }}
+              </button>
+            </div>
+
+          </form>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast הודעת שמירה -->
+  <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1080;">
+    <div *ngIf="saveMessage" class="toast align-items-center text-white border-0 show"
+      [ngClass]="saveSuccess ? 'bg-success' : 'bg-danger'" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body">
+          {{ saveMessage }}
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" (click)="saveMessage = null"
+          aria-label="סגירה"></button>
+      </div>
+    </div>
+  </div>
+
+</div>

@@ -1,0 +1,97 @@
+import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
+import { forkJoin } from 'rxjs';
+import { Contact } from 'src/app/models/contact.model';
+import { ContactService } from 'src/app/service/contact.service';
+
+@Component({
+  selector: 'app-contact-list',
+  templateUrl: './contact-list.component.html',
+  styleUrls: ['./contact-list.component.scss']
+})
+export class ContactListComponent implements OnInit {
+  contacts: Contact[] = [];
+  loading = false;
+  contactId: number | null = null;
+
+  constructor(private contactService: ContactService, private router: Router) {}
+
+  ngOnInit(): void {
+    console.log('ngOnInit called');
+    this.loadContacts();
+  }
+
+  // מביא את כל הרשימה
+loadContacts(): void {
+  this.loading = true;
+  this.contactService.getContacts().subscribe({
+    next: (contacts) => {
+      this.contacts = contacts ? [...contacts] : []; // ← מערך חדש כדי לטריגר רינדור
+      this.loading = false;
+    },
+    error: (error) => {
+      this.loading = false;
+    }
+  });
+}
+
+
+
+  // יצירת איש קשר חדש
+onNewContact(): void {
+  this.router.navigate(['/contact/new']);
+}
+
+
+onContactClick(contact: Contact): void {
+  if (contact?.id != null) {
+    this.router.navigate(['/contact', contact.id], { state: { contact } });
+  }
+}
+
+onEdit(contact: Contact): void {
+    this.router.navigate(['/contact', contact.id], { state: { contact } });
+
+}
+
+  // מחיקת איש קשר
+onDelete(contact: Contact): void {
+  const id = Number((contact as any).id ?? (contact as any).Id);
+  if (Number.isNaN(id)) return;
+
+  this.loading = true;
+  this.contactService.deleteContact(id).subscribe({
+    next: () => {
+      // להסיר מהרשימה מיידית
+      this.contacts = this.contacts.filter(c => Number((c as any).id ?? (c as any).Id) !== id);
+      this.loading = false;
+    },
+    error: (err) => { console.error(err); this.loading = false; }
+  });
+}
+
+
+  // הוספת 10 אנשי קשר רנדומליים
+onAddRandomContacts(): void {
+  this.loading = true;
+  
+  this.contactService.fetchRandomContacts(10).subscribe({
+    next: (contacts) => {
+      const creates$ = contacts.map(c => this.contactService.createContact(c));
+      forkJoin(creates$).subscribe({
+        next: () => this.loadContacts(),
+        error: (err) => { console.error('שגיאה בשמירה:', err); this.loading = false; }
+      });
+    },
+    error: (err) => { console.error('שגיאה בשליפה מ-randomuser:', err); this.loading = false; }
+  });
+}
+
+
+
+
+
+
+
+
+}

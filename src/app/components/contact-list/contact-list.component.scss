@@ -1,0 +1,16 @@
+/* רקע עדין לכל הדף (אם עוד לא קיים) */
+.bg-gradient-primary {
+  background: linear-gradient(135deg, #f2f6ff 0%, #f5fff7 100%);
+}
+
+/* הכרטיס-מסגרת שמחזיק את כל התוכן */
+.app-frame {
+  max-width: 1200px;                 /* רוחב נוח */
+  min-height: calc(100vh - 2rem);    /* כמעט כל הגובה */
+  border: 1px solid rgba(0,0,0,0.08);
+  position: relative;                /* כדי שספינר/אוברליי יישבו רק בפנים */
+}
+
+/* אופציונלי: יישור מרווח פנימי בכרטיסי אנשי קשר */
+.contact-card { transition: transform .15s ease; }
+.contact-card:hover { transform: translateY(-2px); }
