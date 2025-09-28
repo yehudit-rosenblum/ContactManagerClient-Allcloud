@@ -69,23 +69,6 @@ onDelete(contact: Contact): void {
   });
 }
 
-
-  // הוספת 10 אנשי קשר רנדומליים
-// onAddRandomContacts(): void {
-//   this.loading = true;
-  
-//   this.contactService.fetchRandomContacts(10).subscribe({
-//     next: (contacts) => {
-//       const creates$ = contacts.map(c => this.contactService.createContact(c));
-//       forkJoin(creates$).subscribe({
-//         next: () => this.loadContacts(),
-//         error: (err) => { console.error('שגיאה בשמירה:', err); this.loading = false; }
-//       });
-//     },
-//     error: (err) => { console.error('שגיאה בשליפה מ-randomuser:', err); this.loading = false; }
-//   });
-// }
-
 // הוספת 10 אנשי קשר רנדומליים
 onAddRandomContacts(): void {
   this.loading = true;
