@@ -12,6 +12,7 @@ import { ContactService } from '../../service/contact.service';
 export class ContactDetailComponent implements OnInit {
   contactForm: FormGroup;
   contact: Contact = {
+    id: 0,
     name: '',
     fullAddress: '',
     email: '',
@@ -37,18 +38,18 @@ export class ContactDetailComponent implements OnInit {
     this.contactForm = this.createForm();
   }
 
-ngOnInit(): void {
-  this.isEditMode = false; // הוסף שורה זו בתחילה
-  
-  // 1) אם הגענו מהרשימה עם state – עריכה בלי API
-  const stateContact = history.state?.contact as Contact | undefined;
-  if (stateContact) {
-    this.isNewContact = false;
-    this.contactId = stateContact.id ?? null;
-    this.contact = stateContact;
-    this.updateForm();
-    return;
-  }
+  ngOnInit(): void {
+    this.isEditMode = false; // הוסף שורה זו בתחילה
+
+    // 1) אם הגענו מהרשימה עם state – עריכה בלי API
+    const stateContact = history.state?.contact as Contact | undefined;
+    if (stateContact) {
+      this.isNewContact = false;
+      this.contactId = stateContact.id ?? null;
+      this.contact = stateContact;
+      this.updateForm();
+      return;
+    }
 
     // 2) זיהוי מצב לפי הראוט בפועל:
     this.route.params.subscribe(params => {
@@ -84,16 +85,16 @@ ngOnInit(): void {
       name: ['', [Validators.required, Validators.minLength(2)]],
       fullAddress: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
-      phone: [''],
+      phone: ['', Validators.pattern(/^\+?\d[\d\s\-()]{7,15}$/)],
       cell: ['', [Validators.required, Validators.pattern(/^\+?\d[\d\s\-()]{7,15}$/)]],
       age: [null, [Validators.min(1), Validators.max(120)]],
       image: ['']
     });
   }
 
-onEdit(): void {
-  this.isEditMode = true;
-}
+  onEdit(): void {
+    this.isEditMode = true;
+  }
 
 
   //מביאים את הפרטים של האיש קשר וממלאים בטופס
@@ -109,7 +110,6 @@ onEdit(): void {
           this.loading = false;
         },
         error: (error) => {
-          debugger
           console.error('Error loading contact:', error);
           this.loading = false;
         }
@@ -135,69 +135,71 @@ onEdit(): void {
   }
 
 
-onCancel(): void {
-  if (this.isNewContact) {
-    this.router.navigate(['/contacts']);
-  } else if (this.isEditMode) {
-    this.isEditMode = false;
-    this.updateForm(); // החזר לערכים המקוריים
-  } else {
-    this.router.navigate(['/contacts']);
-  }
-}
-
-onSave(): void {
-  if (this.contactForm.valid) {
-    this.loading = true;
-
-    const formValue = this.contactForm.value;
-    const contactToSave: Contact = {
-      ...this.contact,
-      ...formValue,
-      registrationDate: this.contact.registrationDate
-    };
-
-    //אם זה איש קשר חדש
+  onCancel(): void {
     if (this.isNewContact) {
-      this.contactService.createContact(contactToSave).subscribe({
-        next: (createdContact) => {
-          this.loading = false;
-          this.showMessage('איש הקשר נשמר בהצלחה ✅', true);
-          this.router.navigate(['/contacts']);
-        },
-        error: (error) => {
-          debugger
-          this.loading = false;
-          this.showMessage('שגיאה בשמירת איש הקשר ❌', false);
-        }
-      });
+      this.router.navigate(['/contacts']);
+    } else if (this.isEditMode) {
+      this.isEditMode = false;
+      this.updateForm(); // החזר לערכים המקוריים
+    } else {
+      this.router.navigate(['/contacts']);
     }
-    //עריכת איש קשר
-    else if (this.contactId) {
-      this.contactService.updateContact(this.contactId, contactToSave).subscribe({
-        next: (updatedContact) => {
-          console.log('Contact updated:', updatedContact);
-          this.contact = { ...contactToSave, id: this.contactId ?? undefined };
-          this.loading = false;
-          this.isEditMode = false; // יוצא ממצב עריכה
-          this.showMessage('השינויים נשמרו בהצלחה ✅', true);
-          // נשאר בדף הפרטים במצב view
-        },
-        error: (error) => {
-          console.error('Error updating contact:', error);
-          this.loading = false;
-          this.showMessage('שגיאה בעדכון איש הקשר ❌', false);
-        }
-      });
-    }
-  } else {
-    // סמן שדות לא תקינים
-    this.contactForm.markAllAsTouched();
   }
-}
+
+  onSave(): void {
+    if (this.contactForm.valid) {
+      this.loading = true;
+
+      const formValue = this.contactForm.value;
+      const contactToSave: Contact = {
+        ...this.contact,
+        ...formValue,
+        registrationDate: this.contact.registrationDate
+      };
+
+      //אם זה איש קשר חדש
+      if (this.isNewContact) {
+        this.contactService.createContact(contactToSave).subscribe({
+          next: (createdContact) => {
+            this.loading = false;
+            this.showMessage('איש הקשר נשמר בהצלחה ✅', true);
+            this.router.navigate(['/contacts']);
+          },
+          error: (error) => {
+            this.loading = false;
+            this.showMessage('שגיאה בשמירת איש הקשר ❌', false);
+          }
+        });
+      }
+      // עריכת איש קשר
+      else if (this.contactId != null) {
+        const id = this.contactId; // עכשיו זה number, לא null
+        const contactToSaveWithId: Contact = { ...contactToSave, id };
+
+        this.contactService.updateContact(id, contactToSaveWithId).subscribe({
+          next: (updatedContact) => {
+            // נרמול מפתח המזהה במקרה שהשרת מחזיר Id עם I גדולה
+            const normalizedId = updatedContact?.id ?? updatedContact?.Id ?? id;
+            this.contact = { ...(updatedContact ?? contactToSaveWithId), id: normalizedId };
+
+            this.loading = false;
+            this.isEditMode = false;
+            this.showMessage('השינויים נשמרו בהצלחה ✅', true);
+          },
+          error: () => {
+            this.loading = false;
+            this.showMessage('שגיאה בעדכון איש הקשר ❌', false);
+          }
+        });
+      }
+
+    } else {
+      // סמן שדות לא תקינים
+      this.contactForm.markAllAsTouched();
+    }
+  }
 
   onDelete(): void {
-    debugger
     this.loading = true;
     this.contactService.deleteContact(this.contactId!).subscribe({
       next: () => {

@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { forkJoin, take } from 'rxjs';
 import { Contact } from 'src/app/models/contact.model';
 import { ContactService } from 'src/app/service/contact.service';
 
@@ -17,14 +17,13 @@ export class ContactListComponent implements OnInit {
   constructor(private contactService: ContactService, private router: Router) {}
 
   ngOnInit(): void {
-    console.log('ngOnInit called');
     this.loadContacts();
   }
 
   // מביא את כל הרשימה
 loadContacts(): void {
   this.loading = true;
-  this.contactService.getContacts().subscribe({
+  this.contactService.getContacts().pipe(take(1)).subscribe({
     next: (contacts) => {
       this.contacts = contacts ? [...contacts] : []; // ← מערך חדש כדי לטריגר רינדור
       this.loading = false;
