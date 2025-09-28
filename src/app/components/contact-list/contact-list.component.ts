@@ -10,11 +10,11 @@ import { ContactService } from 'src/app/service/contact.service';
   styleUrls: ['./contact-list.component.scss']
 })
 export class ContactListComponent implements OnInit {
-  contacts: Contact[] = [];
+ 
   loading = false;
   contactId: number | null = null;
 
-  constructor(private contactService: ContactService, private router: Router) {}
+  constructor(public contactService: ContactService, private router: Router) {}
 
   ngOnInit(): void {
     this.loadContacts();
@@ -25,7 +25,7 @@ loadContacts(): void {
   this.loading = true;
   this.contactService.getContacts().pipe(take(1)).subscribe({
     next: (contacts) => {
-      this.contacts = contacts ? [...contacts] : []; // ← מערך חדש כדי לטריגר רינדור
+      this.contactService.contacts = contacts ? [...contacts] : []; // ← מערך חדש כדי לטריגר רינדור
       this.loading = false;
     },
     error: (error) => {
@@ -62,7 +62,7 @@ onDelete(contact: Contact): void {
   this.contactService.deleteContact(id).subscribe({
     next: () => {
       // להסיר מהרשימה מיידית
-      this.contacts = this.contacts.filter(c => Number((c as any).id ?? (c as any).Id) !== id);
+      this.contactService.contacts = this.contactService.contacts.filter(c => Number((c as any).id ?? (c as any).Id) !== id);
       this.loading = false;
     },
     error: (err) => { console.error(err); this.loading = false; }
@@ -71,26 +71,35 @@ onDelete(contact: Contact): void {
 
 
   // הוספת 10 אנשי קשר רנדומליים
+// onAddRandomContacts(): void {
+//   this.loading = true;
+  
+//   this.contactService.fetchRandomContacts(10).subscribe({
+//     next: (contacts) => {
+//       const creates$ = contacts.map(c => this.contactService.createContact(c));
+//       forkJoin(creates$).subscribe({
+//         next: () => this.loadContacts(),
+//         error: (err) => { console.error('שגיאה בשמירה:', err); this.loading = false; }
+//       });
+//     },
+//     error: (err) => { console.error('שגיאה בשליפה מ-randomuser:', err); this.loading = false; }
+//   });
+// }
+
+// הוספת 10 אנשי קשר רנדומליים
 onAddRandomContacts(): void {
   this.loading = true;
-  
+
   this.contactService.fetchRandomContacts(10).subscribe({
-    next: (contacts) => {
-      const creates$ = contacts.map(c => this.contactService.createContact(c));
-      forkJoin(creates$).subscribe({
-        next: () => this.loadContacts(),
-        error: (err) => { console.error('שגיאה בשמירה:', err); this.loading = false; }
-      });
+    next: () => {
+      this.loadContacts();      // רענון בלבד – בלי createContact ובלי forkJoin
+      this.loading = false;
     },
-    error: (err) => { console.error('שגיאה בשליפה מ-randomuser:', err); this.loading = false; }
+    error: (err) => {
+      console.error('שגיאה בשליפה מ-randomuser:', err);
+      this.loading = false;
+    }
   });
 }
-
-
-
-
-
-
-
 
 }
