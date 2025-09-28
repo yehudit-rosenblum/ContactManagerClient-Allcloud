@@ -85,7 +85,7 @@ export class ContactDetailComponent implements OnInit {
       name: ['', [Validators.required, Validators.minLength(2)]],
       fullAddress: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
-      phone: ['', Validators.pattern(/^\+?\d[\d\s\-()]{7,15}$/)],
+      phone: ['', Validators.pattern(/^(?:\D*\d\D*){0,12}$/)],
       cell: ['', [Validators.required, Validators.pattern(/^\+?\d[\d\s\-()]{7,15}$/)]],
       age: [null, [Validators.min(1), Validators.max(120)]],
       image: ['']

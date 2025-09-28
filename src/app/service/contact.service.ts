@@ -178,7 +178,6 @@ fetchRandomContacts(count = 10): Observable<Contact[]> {
         map(serverContacts => serverContacts),
         // אם אין שרת: יצירת מזהים זמניים שליליים ושמירה בלוקאל
         catchError(() => {
-          debugger
           const withTempIds: Contact[] = (contactsNoId || []).map((c, i) => ({
             id: - i, 
             ...c
@@ -229,7 +228,6 @@ fetchRandomContacts(count = 10): Observable<Contact[]> {
 
 // שמירה מהלוקאל לשרת → משיכה מהשרת → החלפה מלאה של הלוקאל
 async syncToServerDB(): Promise<void> {
-  debugger
   const local = await firstValueFrom(this.dbService.getAll('contact'));   // שליפת כל אנשי הקשר מהלוקאל
   await firstValueFrom(this.http.put<any>(`${this.apiUrl}/syncFromClient`, local));   // שליחה לשרת 
 
